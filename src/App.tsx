@@ -101,9 +101,13 @@ export default function App() {
     setGeneratingSubject(subjectId);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("API key is missing. Please add GEMINI_API_KEY to your Netlify environment variables and redeploy.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-3-flash-preview",
         contents: `Generate exactly 20 short questions and answers for the subject '${subjectTitle}' based on the upper primary teacher eligibility syllabus. The questions should cover both pedagogy and content. Also provide accurate Odia translations for the question and the answer. Ensure translations are clean and neat without distortion.`,
         config: {
           maxOutputTokens: 8192,
@@ -126,7 +130,13 @@ export default function App() {
 
       const jsonStr = response.text;
       if (jsonStr) {
-        const newQs = JSON.parse(jsonStr);
+        let newQs;
+        try {
+          newQs = JSON.parse(jsonStr);
+        } catch (parseError) {
+          console.error("JSON Parse Error:", parseError, "Raw JSON:", jsonStr);
+          throw new Error("The AI generated too much text and the response was cut off. Please try generating again.");
+        }
         const formattedQs = newQs.map((q: any, index: number) => ({
           id: Date.now() + index,
           subject: subjectId,
@@ -154,10 +164,14 @@ export default function App() {
     setGeneratingMCQs(true);
     setErrorMCQ(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("API key is missing. Please add GEMINI_API_KEY to your Netlify environment variables and redeploy.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
-        contents: `Generate exactly 40 multiple choice questions for the subject '${subjectTitle}' based on the upper primary teacher eligibility syllabus. Each question must have exactly 4 options, a correct answer, and a brief explanation. Also provide accurate Odia translations for the question, options, and explanation. Ensure translations are clean and neat without distortion.`,
+        model: "gemini-3-flash-preview",
+        contents: `Generate exactly 20 multiple choice questions for the subject '${subjectTitle}' based on the upper primary teacher eligibility syllabus. Each question must have exactly 4 options, a correct answer, and a brief explanation. Also provide accurate Odia translations for the question, options, and explanation. Ensure translations are clean and neat without distortion.`,
         config: {
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
@@ -190,7 +204,13 @@ export default function App() {
 
       const jsonStr = response.text;
       if (jsonStr) {
-        const newQs = JSON.parse(jsonStr);
+        let newQs;
+        try {
+          newQs = JSON.parse(jsonStr);
+        } catch (parseError) {
+          console.error("JSON Parse Error:", parseError, "Raw JSON:", jsonStr);
+          throw new Error("The AI generated too much text and the response was cut off. Please try generating again.");
+        }
         const formattedQs = newQs.map((q: any, index: number) => ({
           id: Date.now() + index,
           subject: activeSubject,
