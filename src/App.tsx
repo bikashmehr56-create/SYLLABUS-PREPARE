@@ -106,6 +106,7 @@ export default function App() {
         model: "gemini-3.1-flash-lite-preview",
         contents: `Generate exactly 20 short questions and answers for the subject '${subjectTitle}' based on the upper primary teacher eligibility syllabus. The questions should cover both pedagogy and content. Also provide accurate Odia translations for the question and the answer. Ensure translations are clean and neat without distortion.`,
         config: {
+          maxOutputTokens: 8192,
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.ARRAY,
@@ -140,9 +141,9 @@ export default function App() {
           return [...filtered, ...formattedQs];
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to generate questions:", err);
-      setError(`Failed to generate questions for ${subjectTitle}. Please try again.`);
+      setError(`Failed to generate questions for ${subjectTitle}: ${err.message || 'Unknown error'}. Please try again.`);
     } finally {
       setGeneratingSubject(null);
     }
@@ -158,6 +159,7 @@ export default function App() {
         model: "gemini-3.1-flash-lite-preview",
         contents: `Generate exactly 40 multiple choice questions for the subject '${subjectTitle}' based on the upper primary teacher eligibility syllabus. Each question must have exactly 4 options, a correct answer, and a brief explanation. Also provide accurate Odia translations for the question, options, and explanation. Ensure translations are clean and neat without distortion.`,
         config: {
+          maxOutputTokens: 8192,
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.ARRAY,
@@ -206,9 +208,9 @@ export default function App() {
           return [...formattedQs, ...filtered];
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to generate MCQs:", err);
-      setErrorMCQ(`Failed to generate MCQs for ${subjectTitle}. Please try again.`);
+      setErrorMCQ(`Failed to generate MCQs for ${subjectTitle}: ${err.message || 'Unknown error'}. Please try again.`);
     } finally {
       setGeneratingMCQs(false);
     }
